@@ -1,0 +1,134 @@
+<html>
+    <head>
+        <style>
+           #chatbox {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .message {
+      color: green;
+    }
+
+    .username {
+      font-weight: bold;
+      color: green;
+    }
+
+    .profile-pic {
+      max-width: 30px;
+      max-height: 30px;
+      margin-right: 5px;
+      border-radius: 50%;
+    }
+          body {
+            background-color: black;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Chatroom</h1>
+
+  <div id="chatbox"></div>
+
+  <form id="message-form">
+    <input type="text" id="username" placeholder="Enter your username" style="color: green;" required>
+    <input type="text" id="profile-pic" placeholder="Enter profile picture URL">
+    <input type="text" id="message" placeholder="Type your message" style="color: green;" required>
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    // Function to delete old messages
+    function deleteOldMessages() {
+      const currentTime = new Date().getTime();
+      const storedMessages = localStorage.getItem('chatMessages');
+      if (storedMessages) {
+        const messages = JSON.parse(storedMessages);
+        const updatedMessages = messages.filter((msg) => {
+          const messageTime = new Date(msg.timestamp).getTime();
+          return currentTime - messageTime <= 90000; // 90 seconds in milliseconds
+        });
+        localStorage.setItem('chatMessages', JSON.stringify(updatedMessages));
+      }
+    }
+
+    // Function to display messages
+    function displayMessages() {
+      const storedMessages = localStorage.getItem('chatMessages');
+      if (storedMessages) {
+        const messages = JSON.parse(storedMessages);
+        const chatbox = document.getElementById('chatbox');
+        chatbox.innerHTML = '';
+
+        messages.forEach((message) => {
+          const messageElement = document.createElement('p');
+          const usernameElement = document.createElement('span');
+          usernameElement.classList.add('username');
+
+          if (message.profilePic) {
+            const profilePicElement = document.createElement('img');
+            profilePicElement.src = message.profilePic;
+            profilePicElement.classList.add('profile-pic');
+            messageElement.appendChild(profilePicElement);
+          }
+
+          usernameElement.textContent = message.username + ': ';
+          messageElement.appendChild(usernameElement);
+          messageElement.innerHTML += '<span class="message">' + message.text + '</span>';
+          chatbox.appendChild(messageElement);
+        });
+      }
+    }
+
+    // When the form is submitted
+    document.getElementById('message-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const usernameInput = document.getElementById('username');
+      const profilePicInput = document.getElementById('profile-pic');
+      const messageInput = document.getElementById('message');
+      const username = usernameInput.value;
+      const profilePic = profilePicInput.value;
+      const messageText = messageInput.value;
+
+      if (username && messageText) {
+        const currentTime = new Date().toISOString();
+        const message = {
+          username: username,
+          profilePic: profilePic,
+          text: messageText,
+          timestamp: currentTime
+        };
+
+        const storedMessages = localStorage.getItem('chatMessages');
+        const messages = storedMessages ? JSON.parse(storedMessages) : [];
+        messages.push(message);
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+
+        deleteOldMessages();
+        displayMessages();
+
+        // Clear the input fields
+        messageInput.value = '';
+        messageInput.focus();
+      }
+    });
+
+    // Display messages on page load
+    window.addEventListener('load', () => {
+      displayMessages();
+      deleteOldMessages();
+    });
+
+    // Automatically update and delete messages every 90 seconds
+    setInterval(() => {
+      displayMessages();
+      deleteOldMessages();
+    }, 90000); // 90 seconds in milliseconds
+  </script>
+        <img src="construct.gif" alt="Your GIF">
+      </body>
+      </html>
+</html>
